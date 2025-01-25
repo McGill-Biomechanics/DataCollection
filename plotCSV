@@ -1,0 +1,83 @@
+## plot data from csv file
+def plotCSV(file1, file2, file3, file4, file5):
+    try:
+        ## generate data from csv files
+        dataframe1 = pd.read_csv(file1)
+        x1 = dataframe1["Timestamp"]
+        y1 = dataframe1["Data"]
+
+        dataframe2 = pd.read_csv(file2)
+        x2raw = dataframe2["Timestamp"]
+        # converts x axis into time elapsed in seconds
+        x2 = []
+        start_time = x2raw[0]
+        for timestamp in x2raw:
+            x2.append(timestampDiff(start_time, timestamp))
+        y2 = dataframe2["Data"]
+
+        dataframe3 = pd.read_csv(file3)
+        x3 = dataframe3["Timestamp"]
+        # converts x axis into numbered data points
+        x3 = [i + 1 for i in range(x3.size)]
+        y3 = dataframe3["Data"]
+
+        dataframe4 = pd.read_csv(file4)
+        x4 = dataframe4["Timestamp"]
+        x4 = [i + 1 for i in range(x4.size)]
+        y4 = dataframe4["Data"]
+
+        dataframe5 = pd.read_csv(file5)
+        x5 = dataframe5["Timestamp"]
+        x5 = [i + 1 for i in range(x5.size)]
+        y5 = dataframe5["Data"]
+
+        # adds subplots to container one at a time for uneven rows
+        # indexes are numbered automatically from left to right, top-down
+        fig = plt.figure(figsize=(10.0,7.0)) # size of the window in inches: width, height
+        ax1 = fig.add_subplot(2, 2, 1) # args: nrows, ncols, index
+        ax2 = fig.add_subplot(2, 2, 3)
+        ax3 = fig.add_subplot(3, 2, 2)
+        ax4 = fig.add_subplot(3, 2, 4)
+        ax5 = fig.add_subplot(3, 2, 6)
+
+        # plots data
+        ax1.plot(x1, y1)
+        ax2.plot(x2, y2)
+        ax3.plot(x3, y3)
+        ax4.plot(x4, y4)
+        ax5.plot(x5, y5)
+
+        # adds axis and graph titles - check units
+        ax1.set_title("EMG")
+        ax1.set_xlabel("Timestamp")
+        ax1.set_ylabel("μV")
+        ax2.set_title("Gyroscope")
+        ax2.set_xlabel("Seconds Elapsed")
+        ax2.set_ylabel("°/s")
+        ax3.set_title("Accelerometer")
+        ax3.set_ylabel("X")
+        ax3.yaxis.set_label_position("right")
+        ax4.set_ylabel("Y")
+        ax4.yaxis.set_label_position("right")
+        ax5.set_ylabel("Z")
+        ax5.yaxis.set_label_position("right")
+        ax5.set_xlabel("Data Point (Chronological)")
+
+        # formats the x axis with timestamps by hiding a majority to remove clutter
+        offset = -30 # shifts which datapoints are displayed as ticks (arbitrary)
+        freq = 60 # determines frequency of ticks (arbitrary, chosen for legibility at set window size)
+        x0ticks = ax1.xaxis.get_major_ticks()
+        for i in range(len(x0ticks)):
+            if (i + offset) % freq == 0:
+                x0ticks[i].label1.set_visible(True)
+                x0ticks[i].set_visible(True)
+            else:
+                x0ticks[i].label1.set_visible(False)
+                x0ticks[i].set_visible(False)
+
+        # plt.savefig("file name") # uncomment to save as file
+        # formats the subplots nicely in the window, may need adjustment
+        plt.subplots_adjust(left=0.063, bottom=0.091, right=0.95, top=0.958, wspace=0.15, hspace=0.265)
+        plt.show()
+    except Exception as e:
+        print(e)
