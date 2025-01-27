@@ -1,3 +1,10 @@
+## returns the difference in seconds between timestamps using datetime
+def timestampDiff(time1, time2):
+    time1Parsed = datetime.strptime(time1, "%Y-%m-%d %H:%M:%S") # converts timestamp to datetime object
+    time2Parsed = datetime.strptime(time2, "%Y-%m-%d %H:%M:%S")
+    timeDiff = time2Parsed - time1Parsed
+    return 86400 * timeDiff.days + timeDiff.seconds
+
 ## plot data from csv file
 def plotCSV(file1, file2, file3, file4, file5):
     try:
