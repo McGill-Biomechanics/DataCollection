@@ -1,0 +1,96 @@
+import time
+import serial
+import matplotlib.pyplot as plt
+import matplotlib.animation as ani
+from datetime import datetime
+from serial.tools import list_ports
+
+def find_arduino_port():
+    """ Find the port where Arduino is connected """
+    ports = list(list_ports.comports())
+    for p in ports:
+        if 'Arduino' in p.description: 
+            return p.device
+    return None
+
+def parse_line(line): # does not parse correctly or get saved anywhere
+    """
+    Parse the input line to extract accelerometer, gyroscope, and EMG data.
+    """
+    accel_data = {"X": None, "Y": None, "Z": None}
+    gyro_data = {"X": None, "Y": None, "Z": None}
+    emg_value = None
+    print(line)
+
+    if "Accelerometer:" in line:
+        # Extract accelerometer data
+        try:
+            parts = line.split("Accelerometer:")[1].strip().split(" ")
+            accel_data = {k: float(v.strip()) for k, v in [p.split(":") for p in parts]}
+            print(accel_data)
+        except Exception as e:
+            print(e)
+            pass
+    elif "Gyroscope:" in line:
+        # Extract gyroscope data
+        try:
+            parts = line.split("Gyroscope:")[1].strip().split(" ")
+            gyro_data = {k: float(v.strip()) for k, v in [p.split(":") for p in parts]}
+            print(gyro_data)
+        except Exception as e:
+            print(e)
+            pass
+    else:
+        # Attempt to parse as EMG value
+        try:
+            emg_value = float(line)
+        except:
+            pass
+
+    return accel_data, gyro_data, emg_value
+
+
+def animate(i, dataList, ser):
+    try:
+        if ser.in_waiting > 0:
+            line = ser.readline().decode('utf-8').strip()
+            parse_line(line)
+            dataPoint = float(line)
+            
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Current timestamp
+            print(f"{timestamp}, {line}")
+            file.write(f"{timestamp},{line}\n")  # Save timestamp and data to file
+            dataList.append(dataPoint)
+    except KeyboardInterrupt:
+        print(f"Data saved to {output_file}")
+        ser.close()
+    except:
+        pass
+
+    dataList = dataList[-50:]
+    ax.clear()
+    ax.plot(dataList)
+
+    ax.set_ylim([0, 1000])
+    ax.set_title("EMG Data")
+
+arduino_port = find_arduino_port()
+if arduino_port is None:
+    print("Arduino not found. Check connection or modify find_arduino_port() function.")
+    exit()
+
+ser = serial.Serial(arduino_port, 9600)  # Connect to detected Arduino port
+
+output_file = "arduino_data_with_time3.csv"
+dataList = []
+
+file = open(output_file, 'w')
+print("Logging data... Press Ctrl+C to stop.") # Write the header for the CSV file
+file.write("Timestamp,Data\n")
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ani = ani.FuncAnimation(fig, animate, frames=100, fargs=(dataList, ser), interval=200)
+plt.show()
+print(f"Data saved to {output_file}")
+ser.close()
